@@ -1,0 +1,17 @@
+{
+  "name": "{{APP_SLUG}}",
+  "private": true,
+  "version": "{{APP_VERSION}}",
+  "description": "{{APP_DESCRIPTION}}",
+  "type": "module",
+  "engines": { "node": ">=20" },
+  "scripts": {
+    "check": "node scripts/check-forms.mjs",
+    "bundle": "node scripts/make-bundle.mjs",
+    "preview": "node scripts/preview.mjs"
+  },
+  "devDependencies": {
+    "ajv": "8.17.1",
+    "jszip": "3.10.1"
+  }
+}

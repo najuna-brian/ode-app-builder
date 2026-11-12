@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <title>ODE App Builder</title>
+    <meta name="description" content="Make an Open Data Ensemble app without writing code: brand it, describe your forms, let any AI write them, and download a bundle ready for Synkronus." />
+    <link rel="icon" type="image/png" href="img/favicon.png" />
+    <link rel="apple-touch-icon" href="img/ode-180.png" />
+    <meta name="theme-color" content="#3B7A4B" />
+    <meta property="og:title" content="ODE App Builder" />
+    <meta property="og:description" content="Make an Open Data Ensemble app without writing code. Describe your forms, let any AI write them, and publish to Synkronus." />
+    <meta property="og:image" content="https://ode-app.nahati.online/img/ode-180.png" />
+    <meta property="og:type" content="website" />
+    <link rel="stylesheet" href="css/ode-brand.css" />
+    <link rel="stylesheet" href="css/builder.css" />
+  </head>
+  <body data-view="home">
+    <header class="topbar">
+      <a class="brandmark" href="#/" aria-label="ODE App Builder, your apps"><img src="img/ode-64.png" alt="" width="32" height="32" /><span><strong>ODE</strong> App Builder</span></a>
+      <nav class="ode-links" aria-label="ODE tools">
+        <a href="https://ode-app.nahati.online/" aria-current="page">Build your app</a>
+        <a href="https://ode-server.nahati.online/">Set up your server</a>
+        <a href="https://ode-server.nahati.online/tutorials/">Tutorials</a>
+      </nav>
+      <div class="top-actions">
+        <button type="button" class="ghost preview-btn" id="btnPreview" aria-controls="previewPane" aria-expanded="false" hidden><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="2" width="14" height="20" rx="2"/><path d="M12 18h.01"/></svg><span>Preview</span></button>
+        <button type="button" class="ghost" id="btnOpen" title="Open a saved app file (.odeapp.json) or an app bundle (.zip)">Open<span class="long">&nbsp;a file</span></button>
+        <button type="button" class="ghost" id="btnSave" title="Save this app to a file, to keep a copy or move it to another computer" hidden>Save<span class="long">&nbsp;to file</span></button>
+        <input type="file" id="fileOpen" accept=".json,.zip,application/json,application/zip" hidden />
+      </div>
+    </header>
+
+    <div class="layout">
+      <main class="content" id="content" tabindex="-1"></main>
+      <aside class="preview" id="previewPane" aria-label="Phone preview">
+        <div class="preview-head">
+          <span>Preview</span>
+          <label class="switch"><input type="checkbox" id="previewDark" /> Dark</label>
+          <button type="button" class="icon-btn preview-close" id="previewClose" aria-label="Close preview"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button>
+        </div>
+        <div class="phone"><iframe id="previewFrame" title="App preview" sandbox="allow-scripts"></iframe></div>
+        <p class="preview-note">Tap through it like a phone. Forms open in the real ODE form player.</p>
+      </aside>
+    </div>
+
+    <footer class="ode-foot">
+      <p class="ode-foot-title"><img src="img/ode-64.png" alt="" width="24" height="24" />Community tools for Open Data Ensemble</p>
+      <nav aria-label="Project links">
+        <a href="https://opendataensemble.org">opendataensemble.org</a>
+        <a href="https://github.com/najuna-brian/ode-app-builder">App Builder on GitHub</a>
+        <a href="https://github.com/najuna-brian/ode-server-setup">Server setup on GitHub</a>
+        <a href="https://github.com/OpenDataEnsemble/synkronus-quickstart">synkronus-quickstart</a>
+      </nav>
+      <p class="ode-credit">Hosted and supported by <a href="https://nahati.online">Nahati Technologies</a> as a contribution to Open Data Ensemble. We claim no ownership; all code is open source under its original licences and the ODE project may adopt, move or rehost these tools at any time.</p>
+    </footer>
+
+    <dialog id="dialog"><div id="dialogBody"></div></dialog>
+    <div id="toast" role="status" hidden></div>
+
+    <script src="vendor/jszip.min.js"></script>
+    <script src="vendor/ajv.min.js"></script>
+    <script src="js/core.js"></script>
+    <script src="js/templates.js"></script>
+    <script src="js/examples.js"></script>
+    <script src="js/gallery.js"></script>
+    <script src="js/icons.js"></script>
+    <script src="js/colors.js"></script>
+    <script src="js/formmodel.js"></script>
+    <script src="js/editor.js"></script>
+    <script src="js/xlsform.js"></script>
+    <script src="js/formpreview.js"></script>
+    <script src="js/app.js"></script>
+  </body>
+</html>

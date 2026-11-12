@@ -1,0 +1,528 @@
+# ODE App Builder templates gallery.
+# Each "app" block becomes a ready-made project; tools/embed.mjs compiles it with the same form
+# model the question editor uses. Format:
+#   app <id>            then  key: value  lines (title, sector, blurb, icon, name, desc, primary, secondary, design, welcome, footer)
+#   form <id> "Title" icon=.. desc=".." parent=<form id> summary=a,b
+#   page "Title" if=<condition>
+#   note "Text" if=<condition>
+#   <type> <name> "Label" req ro min=.. max=.. hint=".." if=<condition> choices=a|b|c  (or value:Label|value:Label)
+# Types: text longtext phone email integer decimal one many rating date time datetime adate timer photo gps signature audio video scan file
+# Conditions: q=v  q!=v  q~v (includes)  q>n q>=n q<n q<=n  q? (answered); join with & (all) or , (any)
+
+app health
+title: Community health
+sector: Health
+icon: stethoscope
+blurb: Household register, member list, home visits with danger signs and referrals, pregnancy follow-up.
+name: Community Health
+desc: Household visits and referrals
+primary: #0F766E
+secondary: #B45309
+design: dashboard
+welcome: Register each household once. Open it to add members, record visits and follow up pregnancies.
+footer: In an emergency, refer to the nearest health facility straight away.
+
+form household "Household" icon=house desc="Register once per household" summary=head_name,village
+page "Where"
+text village "Village or zone" req
+text head_name "Head of household" req
+phone phone "Phone number"
+gps location "Location of the house"
+page "The household"
+integer members "How many people live here?" req min=1 max=40
+one water "Main source of drinking water" req choices=Piped|Borehole|Protected well|Unprotected well|River or lake|Other
+one latrine "Does the household have a latrine?" req choices=yes:Yes|no:No
+integer nets "How many sleeping nets are in use?" min=0 max=20
+
+form member "Household member" icon=user parent=household desc="Each person in the household" summary=full_name,sex
+text full_name "Full name" req
+one sex "Sex" req choices=female:Female|male:Male
+adate dob "Date of birth" req hint="Use the year only if the exact date is not known."
+one relation "Relationship to head" choices=Head|Spouse|Child|Parent|Other relative|Not related
+one pregnant "Is she pregnant?" if=sex=female choices=yes:Yes|no:No|unknown:Does not know
+
+form visit "Home visit" icon=stethoscope parent=household desc="Each time you visit" summary=visit_date,reason
+date visit_date "Date of visit" req
+one reason "Main reason for the visit" req choices=Routine|Sick person|Pregnancy follow-up|Newborn check|Referral follow-up
+page "Danger signs"
+many danger "Danger signs seen" hint="Tick all that apply." choices=None|Fever|Fast breathing|Diarrhoea with blood|Convulsions|Unable to drink|Bleeding in pregnancy
+decimal temperature "Temperature (°C)" min=34 max=43 if=danger~fever
+page "Action"
+one referred "Referred to a health facility?" req choices=yes:Yes|no:No
+text facility "Which facility?" req if=referred=yes
+photo referral_slip "Photo of the referral slip" if=referred=yes
+date next_visit "Next visit date"
+longtext notes "Notes"
+
+app agriculture
+title: Farmer and plot register
+sector: Agriculture
+icon: sprout
+blurb: Farmer profiles with photo and ID, mapped plots, extension visits, harvests and training attendance.
+name: Farm Support
+desc: Farmers, plots, visits and harvests
+primary: #3F6212
+secondary: #B45309
+design: grid
+welcome: Register the farmer, add their plots, then record each visit and harvest from the plot page.
+
+form farmer "Farmer" icon=user desc="Register once per farmer" summary=farmer_name,village
+text farmer_name "Farmer name" req
+one sex "Sex" choices=female:Female|male:Male
+adate dob "Date of birth"
+phone phone "Phone number"
+text village "Village" req
+scan id_card "Scan the farmer ID card" hint="Skip if the farmer has no card."
+photo farmer_photo "Photo of the farmer"
+one group "Member of a farmer group?" choices=yes:Yes|no:No
+text group_name "Group name" if=group=yes req
+
+form plot "Plot" icon=map parent=farmer desc="Each plot the farmer uses" summary=plot_name,main_crop
+text plot_name "Plot name or number" req
+gps plot_gps "Plot location (stand in the middle)" req
+decimal area_acres "Plot size (acres)" req min=0.01 max=500
+one tenure "Land ownership" choices=Owned|Rented|Family land|Communal
+one main_crop "Main crop this season" req choices=Maize|Beans|Cassava|Coffee|Banana|Rice|Vegetables|Other
+text other_crop "Which crop?" req if=main_crop=other
+one irrigated "Is the plot irrigated?" choices=yes:Yes|no:No
+
+form visit "Extension visit" icon=clipboard-check parent=plot desc="Advice and checks on a plot" summary=visit_date,crop_stage
+date visit_date "Date of visit" req
+one crop_stage "Crop stage" req choices=Land preparation|Planting|Growing|Flowering|Harvest
+many problems "Problems seen" choices=None|Pests|Disease|Drought stress|Weeds|Poor soil
+photo problem_photo "Photo of the problem" if=problems~pests,problems~disease
+many advice "Advice given" choices=Weeding|Spraying|Fertiliser|Mulching|Spacing|Post-harvest handling
+rating satisfaction "How useful was this visit for the farmer?" req
+longtext notes "Notes"
+
+form harvest "Harvest" icon=wheat parent=plot desc="What came off the plot" summary=harvest_date,quantity_kg
+date harvest_date "Harvest date" req
+decimal quantity_kg "Quantity harvested (kg)" req min=0 max=100000
+decimal sold_kg "Quantity sold (kg)" min=0 max=100000
+decimal price "Price per kg" min=0
+one buyer "Sold to" if=sold_kg>0 choices=Trader|Cooperative|Market|Processor|Other
+
+form training "Training attendance" icon=graduation-cap desc="One record per session" summary=topic,session_date
+date session_date "Date" req
+text topic "Topic" req
+text place "Place"
+integer women "Women who attended" min=0 max=500 req
+integer men "Men who attended" min=0 max=500 req
+photo attendance_sheet "Photo of the attendance sheet"
+
+app tourism
+title: Sites and visitors
+sector: Tourism and hospitality
+icon: map-pin
+blurb: Attraction and site register with GPS and photos, inspections, visitor feedback and incident reports.
+name: Destination Monitor
+desc: Sites, inspections and visitor feedback
+primary: #0369A1
+secondary: #C2410C
+design: grid
+welcome: Choose a site, then record an inspection, visitor feedback or an incident.
+
+form site "Site" icon=map-pin desc="Attractions, lodges and facilities" summary=site_name,site_type
+text site_name "Site name" req
+one site_type "Type of site" req choices=Attraction|Hotel or lodge|Restaurant|Campsite|Tour operator|Craft shop|Other
+text operator "Operator or owner"
+phone phone "Contact phone"
+gps site_gps "Location" req
+photo site_photo "Photo of the entrance"
+one licensed "Licensed to operate?" choices=yes:Yes|no:No|expired:Expired
+date licence_expiry "Licence expiry date" if=licensed=yes
+
+form inspection "Inspection" icon=clipboard-check parent=site desc="Standards checklist" summary=inspection_date,overall
+date inspection_date "Date" req
+page "Checklist"
+one clean "Clean and tidy" req choices=pass:Pass|fail:Fail|na:Not applicable
+one safety "Safety equipment (fire, first aid)" req choices=pass:Pass|fail:Fail|na:Not applicable
+one toilets "Toilets and water" req choices=pass:Pass|fail:Fail|na:Not applicable
+one signage "Signs and visitor information" req choices=pass:Pass|fail:Fail|na:Not applicable
+one access "Access for people with disabilities" req choices=pass:Pass|fail:Fail|na:Not applicable
+page "Result"
+rating overall "Overall rating" req
+longtext defects "What must be fixed?" if=clean=fail,safety=fail,toilets=fail,signage=fail,access=fail req
+photo defect_photo "Photo of the main problem" if=clean=fail,safety=fail,toilets=fail
+date follow_up "Follow-up visit by"
+signature manager_signature "Manager signature"
+
+form feedback "Visitor feedback" icon=star parent=site desc="Short survey with visitors" summary=nationality,satisfaction
+one visitor_type "Visitor" req choices=Domestic|International|Resident foreigner
+text nationality "Country of residence" if=visitor_type!=domestic
+integer group_size "People in the group" min=1 max=200
+many came_for "Reasons for the visit" choices=Wildlife|Culture|Nature|Business|Family|Adventure
+rating satisfaction "How satisfied are you with your visit?" req
+one recommend "Would you recommend this place?" req choices=yes:Yes|maybe:Maybe|no:No
+longtext comments "Comments"
+
+form incident "Incident report" icon=shield-check parent=site desc="Accidents, complaints, damage" summary=incident_date,kind
+datetime incident_date "When did it happen?" req
+one kind "Type of incident" req choices=Injury|Theft|Complaint|Damage|Wildlife conflict|Other
+longtext what "What happened?" req
+integer injured "People injured" min=0 max=100 if=kind=injury req
+photo incident_photo "Photo"
+gps incident_gps "Location"
+
+app education
+title: Schools and learners
+sector: Education
+icon: school
+blurb: School register, enrolment, daily attendance, learner assessments and classroom observation.
+name: School Visits
+desc: Schools, attendance and learning checks
+primary: #4338CA
+secondary: #0F766E
+design: dashboard
+welcome: Pick a school to record attendance, a classroom observation or a learner assessment.
+
+form school "School" icon=school desc="Register once per school" summary=school_name,district
+text school_name "School name" req
+text emis_code "School code"
+text district "District" req
+one ownership "Ownership" choices=Government|Private|Community|Faith-based
+gps school_gps "Location"
+integer classrooms "Number of classrooms" min=0 max=200
+one water "Safe drinking water at school?" choices=yes:Yes|no:No
+one electricity "Electricity?" choices=yes:Yes|no:No
+
+form enrolment "Enrolment" icon=users parent=school desc="Learners per class, each term" summary=term,class_level
+one term "Term" req choices=Term 1|Term 2|Term 3
+one class_level "Class" req choices=Primary 1|Primary 2|Primary 3|Primary 4|Primary 5|Primary 6|Primary 7
+integer girls "Girls enrolled" req min=0 max=500
+integer boys "Boys enrolled" req min=0 max=500
+integer with_disability "Learners with a disability" min=0 max=500
+
+form attendance "Attendance" icon=calendar parent=school desc="Daily head count" summary=day,class_level
+date day "Date" req
+one class_level "Class" req choices=Primary 1|Primary 2|Primary 3|Primary 4|Primary 5|Primary 6|Primary 7
+integer girls_present "Girls present" req min=0 max=500
+integer boys_present "Boys present" req min=0 max=500
+one teacher_present "Was the teacher present?" req choices=yes:Yes|no:No
+text absence_reason "Why was the teacher absent?" if=teacher_present=no
+
+form observation "Classroom observation" icon=notebook-pen parent=school desc="Lesson quality check" summary=obs_date,subject
+date obs_date "Date" req
+one subject "Subject" req choices=Literacy|Numeracy|Science|Social studies|English|Other
+timer lesson_time "Lesson length" hint="Start the timer when the lesson starts."
+one lesson_plan "Teacher had a lesson plan" req choices=yes:Yes|no:No
+rating participation "Learner participation" req
+rating materials "Use of teaching materials" req
+longtext feedback "Feedback given to the teacher"
+signature teacher_signature "Teacher signature"
+
+form assessment "Learner assessment" icon=book-open parent=school desc="Reading and maths check for one learner" summary=learner_id,grade
+text learner_id "Learner ID or initials" req
+one grade "Class" req choices=Primary 2|Primary 3|Primary 4
+one sex "Sex" choices=female:Female|male:Male
+integer letters "Letters read correctly in 1 minute" min=0 max=100 req
+integer words "Words read correctly in 1 minute" min=0 max=100 req
+integer sums "Sums correct (out of 20)" min=0 max=20 req
+audio reading "Recording of the learner reading" hint="Only with consent."
+
+app wash
+title: Water points and sanitation
+sector: Water, sanitation and hygiene
+icon: droplets
+blurb: Water point register with GPS and photo, functionality checks, water quality tests, repairs and household sanitation.
+name: WASH Monitor
+desc: Water points, repairs and sanitation
+primary: #0E7490
+secondary: #A16207
+design: grid
+welcome: Find or register the water point, then record a check, a water test or a repair.
+
+form waterpoint "Water point" icon=droplets desc="Register once per water point" summary=wp_name,wp_type
+text wp_name "Name or number" req
+one wp_type "Type" req choices=Borehole with hand pump|Protected spring|Shallow well|Tap stand|Rainwater tank|Other
+gps wp_gps "Location" req
+photo wp_photo "Photo" req
+integer year_built "Year built" min=1950 max=2100
+text managed_by "Water committee or manager"
+integer users "About how many households use it?" min=0 max=5000
+
+form check "Functionality check" icon=clipboard-check parent=waterpoint desc="Is it working?" summary=check_date,working
+date check_date "Date" req
+one working "Is it working?" req choices=yes:Yes|partly:Partly|no:No
+many issues "What is wrong?" if=working!=yes req choices=Broken handle|Low yield|Dry|Leaking|Dirty water|Broken apron|Other
+timer fill_time "Time to fill a 20 litre jerrycan" if=working!=no
+one fee "Do users pay a fee?" choices=yes:Yes|no:No
+photo check_photo "Photo"
+
+form quality "Water quality test" icon=test-tube parent=waterpoint desc="Field test results" summary=test_date,ecoli
+date test_date "Date" req
+decimal ph "pH" min=0 max=14
+decimal turbidity "Turbidity (NTU)" min=0 max=1000
+integer ecoli "E. coli (colonies per 100 ml)" min=0 max=10000 req
+decimal free_chlorine "Free chlorine (mg/l)" min=0 max=10
+note "If E. coli is above 0, tell the committee and the health office today." if=ecoli>0
+
+form repair "Repair" icon=zap parent=waterpoint desc="Work done and cost" summary=repair_date,work
+date repair_date "Date" req
+longtext work "Work done" req
+many parts "Parts replaced" choices=Handle|Chain|Pipes|Cylinder|Seals|Tap|Other
+decimal cost "Total cost" min=0
+one now_working "Working after the repair?" req choices=yes:Yes|no:No
+photo after_photo "Photo after the repair"
+
+form sanitation "Household sanitation" icon=house desc="One household" summary=village,latrine_type
+text village "Village" req
+gps hh_gps "Location"
+one latrine_type "Latrine" req choices=None (open defecation)|Pit without slab|Pit with slab|Ventilated pit|Flush or pour flush|Shared
+one handwashing "Handwashing place with water and soap?" req choices=Water and soap|Water only|None
+photo latrine_photo "Photo of the latrine" if=latrine_type!=none_open_defecation
+
+app environment
+title: Conservation patrols
+sector: Environment and conservation
+icon: trees
+blurb: Patrol logs, wildlife sightings with GPS and photos, threats and illegal activity, tree planting and survival.
+name: Ranger Patrols
+desc: Patrols, sightings and threats
+primary: #166534
+secondary: #92400E
+design: dashboard
+welcome: Start a patrol, then add sightings and threats from the patrol page as you go.
+
+form patrol "Patrol" icon=map desc="One record per patrol" summary=patrol_date,team_leader
+date patrol_date "Date" req
+text team_leader "Team leader" req
+integer team_size "Rangers in the team" min=1 max=50 req
+one patrol_type "Type of patrol" req choices=Foot|Vehicle|Boat|Aerial
+gps start_gps "Start point" req
+time start_time "Start time" req
+time end_time "End time"
+longtext summary "Summary"
+
+form sighting "Wildlife sighting" icon=star parent=patrol desc="Animals seen" summary=species,count
+text species "Species" req
+integer count "How many?" req min=1 max=10000
+one evidence "Seen how?" choices=Direct sighting|Tracks|Dung|Sound|Carcass
+gps sighting_gps "Location" req
+photo sighting_photo "Photo"
+one carcass_cause "Likely cause of death" if=evidence=carcass choices=Natural|Poaching|Disease|Unknown
+
+form threat "Threat or illegal activity" icon=shield-check parent=patrol desc="Snares, logging, fires" summary=threat_type,action
+one threat_type "What was found?" req choices=Snare or trap|Logging|Charcoal|Fire|Grazing|Encroachment|Mining|Other
+gps threat_gps "Location" req
+integer items "Number of items (e.g. snares removed)" min=0 max=10000
+one people "People found?" choices=yes:Yes|no:No
+integer arrested "People arrested" if=people=yes min=0 max=100
+one action "Action taken" req choices=Removed|Reported|Arrest|None
+photo threat_photo "Photo" req
+
+form planting "Tree planting" icon=sprout desc="Trees planted at a site" summary=site_name,trees
+text site_name "Site name" req
+gps site_gps "Location" req
+date planting_date "Date" req
+text species_planted "Species" req
+integer trees "Trees planted" req min=1 max=1000000
+photo planting_photo "Photo"
+
+form survival "Survival check" icon=clipboard-check parent=planting desc="Months after planting" summary=check_date,alive
+date check_date "Date" req
+integer alive "Trees alive" req min=0 max=1000000
+many causes "Causes of loss" choices=Drought|Animals|Fire|Pests|People|None
+photo survival_photo "Photo"
+
+app livestock
+title: Livestock and veterinary
+sector: Livestock
+icon: milk
+blurb: Herd register, vaccinations, disease reports and treatment follow-up.
+name: Animal Health
+desc: Herds, vaccination and disease reports
+primary: #9A3412
+secondary: #0F766E
+design: grid
+welcome: Register the herd, then record vaccinations, disease cases and treatments from its page.
+
+form herd "Herd" icon=milk desc="One per owner" summary=owner_name,village
+text owner_name "Owner name" req
+phone phone "Phone number"
+text village "Village" req
+gps herd_gps "Location of the kraal or farm"
+integer cattle "Cattle" min=0 max=10000
+integer goats "Goats" min=0 max=10000
+integer sheep "Sheep" min=0 max=10000
+integer poultry "Poultry" min=0 max=100000
+
+form vaccination "Vaccination" icon=syringe parent=herd desc="Animals vaccinated" summary=vacc_date,vaccine
+date vacc_date "Date" req
+one species "Animals" req choices=Cattle|Goats|Sheep|Poultry|Dogs|Pigs
+one vaccine "Vaccine" req choices=Foot and mouth|Lumpy skin|Anthrax|PPR|Newcastle|Rabies|Other
+integer animals "Animals vaccinated" req min=1 max=100000
+text batch "Vaccine batch number"
+scan batch_scan "Scan the vial barcode"
+
+form disease "Disease report" icon=bug parent=herd desc="Sick or dead animals" summary=report_date,suspected
+date report_date "Date" req
+one species "Animals" req choices=Cattle|Goats|Sheep|Poultry|Dogs|Pigs
+integer sick "Sick animals" req min=0 max=100000
+integer dead "Dead animals" req min=0 max=100000
+many signs "Signs" choices=Fever|Diarrhoea|Coughing|Skin lumps|Lameness|Abortion|Sudden death|Not eating
+text suspected "Suspected disease"
+one sample "Sample taken?" choices=yes:Yes|no:No
+scan sample_id "Scan the sample label" if=sample=yes
+photo disease_photo "Photo"
+
+form treatment "Treatment" icon=pill parent=herd desc="Treatment and follow-up" summary=treat_date,drug
+date treat_date "Date" req
+text drug "Drug given" req
+integer animals_treated "Animals treated" req min=1 max=100000
+date follow_up "Follow-up date"
+one outcome "Outcome at follow-up" choices=Recovered|Improving|No change|Died
+
+app markets
+title: Markets and savings groups
+sector: Markets and livelihoods
+icon: shopping-cart
+blurb: Weekly market prices, trader register and savings group meetings with savings, loans and repayments.
+name: Market Watch
+desc: Prices, traders and savings groups
+primary: #B45309
+secondary: #1D4ED8
+design: dashboard
+welcome: Record this week's prices, or open a savings group to log its meeting.
+
+form market "Market" icon=shopping-cart desc="Register once per market" summary=market_name,district
+text market_name "Market name" req
+text district "District" req
+gps market_gps "Location"
+many market_days "Market days" choices=Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday
+
+form price "Price collection" icon=scale parent=market desc="Weekly prices" summary=price_date,commodity
+date price_date "Date" req
+one commodity "Commodity" req choices=Maize grain|Maize flour|Beans|Rice|Cassava|Tomatoes|Onions|Cooking oil|Sugar|Other
+text other_commodity "Which commodity?" req if=commodity=other
+one unit "Unit" req choices=kg|Bag (100 kg)|Litre|Bunch|Piece
+decimal price_low "Lowest price" req min=0
+decimal price_high "Highest price" req min=0
+one supply "Supply this week" choices=Plenty|Normal|Scarce
+
+form trader "Trader" icon=user parent=market desc="Traders in the market" summary=trader_name,goods
+text trader_name "Trader name" req
+one sex "Sex" choices=female:Female|male:Male
+phone phone "Phone number"
+text goods "Main goods sold" req
+one licensed "Has a trading licence?" choices=yes:Yes|no:No
+
+form group "Savings group" icon=users desc="Register once per group" summary=group_name,village
+text group_name "Group name" req
+text village "Village" req
+date started "Date started"
+integer members "Members" req min=1 max=200
+decimal share_value "Value of one share" min=0
+
+form meeting "Group meeting" icon=wallet parent=group desc="Each meeting" summary=meeting_date,present
+date meeting_date "Date" req
+integer present "Members present" req min=0 max=200
+decimal savings "Savings collected" req min=0
+decimal loans_out "New loans given" min=0
+decimal repaid "Loan repayments received" min=0
+decimal social_fund "Social fund" min=0
+decimal cash_box "Cash in the box after the meeting" req min=0
+photo ledger "Photo of the ledger page"
+
+app humanitarian
+title: Beneficiaries and distributions
+sector: Humanitarian and social protection
+icon: hand-heart
+blurb: Beneficiary registration, needs assessment, distribution tracking, case follow-up and feedback.
+name: Aid Tracker
+desc: Registration, distributions and follow-up
+primary: #B91C1C
+secondary: #1D4ED8
+design: dashboard
+welcome: Register the household, then record assessments, distributions and follow-ups from its page.
+
+form beneficiary "Beneficiary household" icon=users desc="Register once per household" summary=head_name,location
+text head_name "Head of household" req
+one sex "Sex of the head" req choices=female:Female|male:Male
+adate dob "Date of birth of the head"
+scan id_number "Scan the ID or ration card"
+text location "Settlement, block or village" req
+gps hh_gps "Location"
+integer hh_size "Household size" req min=1 max=40
+many vulnerable "Vulnerable members" choices=None|Child-headed|Older person alone|Disability|Pregnant or breastfeeding|Chronic illness
+photo hh_photo "Photo of the head of household" hint="Only with consent."
+signature consent "Consent signature" req
+
+form assessment "Needs assessment" icon=clipboard-list parent=beneficiary desc="What the household needs" summary=assess_date,priority
+date assess_date "Date" req
+one shelter "Shelter condition" req choices=Good|Damaged|Destroyed|No shelter
+one food "Meals per day for adults" req choices=3 or more|2|1|None
+one water_access "Enough water for drinking and cooking?" req choices=yes:Yes|no:No
+many needs "Needs" choices=Food|Shelter|Water|Health|Cash|Education|Protection
+one priority "Most urgent need" req choices=Food|Shelter|Water|Health|Cash|Education|Protection
+
+form distribution "Distribution" icon=package parent=beneficiary desc="What was handed over" summary=dist_date,item
+date dist_date "Date" req
+one item "Item" req choices=Food basket|Cash|Shelter kit|Hygiene kit|Kitchen set|Seeds and tools
+decimal quantity "Quantity or amount" req min=0
+scan voucher "Scan the voucher"
+signature received_by "Signature of the person receiving" req
+
+form followup "Case follow-up" icon=notebook-pen parent=beneficiary desc="Visits and referrals" summary=fu_date,status
+date fu_date "Date" req
+one status "Situation" req choices=Improved|Same|Worse
+one referred "Referred to another service?" choices=yes:Yes|no:No
+one service "Which service?" if=referred=yes req choices=Health|Protection|Legal|Education|Livelihoods
+longtext notes "Notes"
+
+form feedback "Feedback and complaints" icon=message-square-text desc="Anyone can give feedback" summary=fb_type,channel
+one fb_type "Type" req choices=Complaint|Suggestion|Thanks|Question
+one channel "Received by" choices=In person|Phone|Help desk|Community meeting
+longtext details "Details" req
+one sensitive "Is it sensitive (abuse, fraud)?" req choices=yes:Yes|no:No
+note "Sensitive feedback goes straight to the protection focal point. Do not share it with others." if=sensitive=yes
+phone contact "Contact phone (optional)"
+
+app inspections
+title: Asset inspections
+sector: Infrastructure and inspections
+icon: building
+blurb: Asset register, pass or fail inspection checklists, defects with photos and repair follow-up.
+name: Asset Inspector
+desc: Assets, inspections and defects
+primary: #334155
+secondary: #EA580C
+design: list
+welcome: Open an asset to inspect it, log a defect or record a repair.
+
+form asset "Asset" icon=building desc="Buildings, bridges, equipment" summary=asset_name,asset_type
+text asset_name "Asset name or number" req
+one asset_type "Type" req choices=Building|Bridge|Road section|Water tank|Generator|Vehicle|Other
+scan asset_tag "Scan the asset tag"
+gps asset_gps "Location" req
+integer year "Year built or bought" min=1900 max=2100
+photo asset_photo "Photo" req
+
+form inspection "Inspection" icon=clipboard-check parent=asset desc="Checklist with pass or fail" summary=insp_date,result
+date insp_date "Date" req
+text inspector "Inspector" req
+page "Checklist"
+one structure "Structure sound" req choices=pass:Pass|fail:Fail|na:Not applicable
+one electrical "Electrical safe" req choices=pass:Pass|fail:Fail|na:Not applicable
+one fire "Fire safety in place" req choices=pass:Pass|fail:Fail|na:Not applicable
+one access "Access and exits clear" req choices=pass:Pass|fail:Fail|na:Not applicable
+one clean "Clean and maintained" req choices=pass:Pass|fail:Fail|na:Not applicable
+page "Result"
+one result "Overall result" req choices=pass:Pass|minor:Pass with minor defects|fail:Fail
+longtext findings "Main findings" if=result!=pass req
+signature inspector_signature "Inspector signature" req
+
+form defect "Defect" icon=triangle-alert parent=asset desc="Something that needs fixing" summary=severity,defect_type
+one defect_type "Type" req choices=Crack|Leak|Corrosion|Electrical|Broken part|Other
+one severity "Severity" req choices=Low|Medium|High|Critical
+longtext description "Description" req
+photo defect_photo "Photo" req
+gps defect_gps "Exact location"
+date fix_by "Fix by"
+
+form repair "Repair" icon=zap parent=asset desc="Work done" summary=repair_date,fixed
+date repair_date "Date" req
+longtext work "Work done" req
+decimal cost "Cost" min=0
+one fixed "Defect fixed?" req choices=yes:Yes|partly:Partly|no:No
+photo after_photo "Photo after"

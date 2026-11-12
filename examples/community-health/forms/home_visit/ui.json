@@ -1,0 +1,52 @@
+{
+  "type": "SwipeLayout",
+  "options": { "headerTitle": "Home visit" },
+  "translations": { "sw": { "headerTitle": "Ziara ya nyumbani" } },
+  "elements": [
+    {
+      "type": "VerticalLayout",
+      "elements": [
+        { "type": "Control", "scope": "#/properties/visit_date", "label": "Visit date", "translations": { "sw": { "label": "Tarehe ya ziara" } } },
+        { "type": "Control", "scope": "#/properties/head_name", "label": "Head of household name", "translations": { "sw": { "label": "Jina la mkuu wa kaya" } } }
+      ]
+    },
+    {
+      "type": "VerticalLayout",
+      "elements": [
+        { "type": "Control", "scope": "#/properties/anyone_sick", "label": "Is anyone sick today?", "translations": { "sw": { "label": "Kuna mtu anaumwa leo?", "options": { "oneOf": [{ "const": "yes", "title": "Ndiyo" }, { "const": "no", "title": "Hapana" }] } } } },
+        {
+          "type": "Control", "scope": "#/properties/symptoms", "label": "Which symptoms?",
+          "translations": { "sw": { "label": "Dalili zipi?", "options": { "oneOf": [{ "const": "fever", "title": "Homa" }, { "const": "cough", "title": "Kikohozi" }, { "const": "diarrhoea", "title": "Kuhara" }, { "const": "rash", "title": "Vipele" }, { "const": "other", "title": "Nyingine" }] } } },
+          "rule": { "effect": "SHOW", "condition": { "scope": "#/properties/anyone_sick", "schema": { "const": "yes" } } }
+        },
+        {
+          "type": "Control", "scope": "#/properties/symptom_other", "label": "Other symptom",
+          "translations": { "sw": { "label": "Dalili nyingine" } },
+          "rule": { "effect": "SHOW", "condition": { "scope": "#/properties/symptoms", "schema": { "contains": { "const": "other" } } } }
+        },
+        {
+          "type": "Control", "scope": "#/properties/temperature_c", "label": "Temperature (°C)",
+          "translations": { "sw": { "label": "Joto la mwili (°C)" } },
+          "rule": { "effect": "SHOW", "condition": { "scope": "#/properties/anyone_sick", "schema": { "const": "yes" } } }
+        }
+      ]
+    },
+    {
+      "type": "VerticalLayout",
+      "elements": [
+        { "type": "Control", "scope": "#/properties/referred", "label": "Referred to a clinic?", "translations": { "sw": { "label": "Amepelekwa kliniki?", "options": { "oneOf": [{ "const": "yes", "title": "Ndiyo" }, { "const": "no", "title": "Hapana" }] } } } },
+        {
+          "type": "Control", "scope": "#/properties/clinic", "label": "Which clinic?",
+          "translations": { "sw": { "label": "Kliniki ipi?" } },
+          "rule": { "effect": "SHOW", "condition": { "scope": "#/properties/referred", "schema": { "const": "yes" } } }
+        },
+        {
+          "type": "Control", "scope": "#/properties/referral_photo", "label": "Photo of the referral slip",
+          "translations": { "sw": { "label": "Picha ya fomu ya rufaa" } },
+          "rule": { "effect": "SHOW", "condition": { "scope": "#/properties/referred", "schema": { "const": "yes" } } }
+        },
+        { "type": "Control", "scope": "#/properties/notes", "label": "Notes", "options": { "multi": true }, "translations": { "sw": { "label": "Maelezo" } } }
+      ]
+    }
+  ]
+}

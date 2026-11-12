@@ -1,0 +1,45 @@
+{
+  "exampleTitle": "Community health visits",
+  "exampleDescription": "Register households, then record home visits with symptoms, referrals and a photo.",
+  "app": {
+    "name": "Community Health Visits",
+    "description": "Household register and home visit records",
+    "version": "1.0.0",
+    "defaultLocale": "en"
+  },
+  "brand": {
+    "primary": "#0F766E",
+    "secondary": "#B45309"
+  },
+  "home": {
+    "welcome": "Register a household first, then record each home visit.",
+    "layout": "grid",
+    "showCounts": true,
+    "showRecords": true,
+    "footer": "Questions? Contact your supervisor."
+  },
+  "forms": [
+    {
+      "title": "Register household",
+      "formType": "household",
+      "description": "Once per household",
+      "icon": "house",
+      "color": "#0F766E",
+      "languages": [
+        "sw"
+      ],
+      "brief": "One record per household.\n- Village name (text, required)\n- Head of household name (text, required)\n- Phone number (text, optional)\n- Number of people living in the household (whole number 1 to 40, required)\n- Any children under 5? Yes/No (required)\n- If yes: how many children under 5 (whole number 1 to 20)\n- GPS location of the house\n- Consent to take part: Yes/No (required). If No, ask the reason (text).\nTranslate labels to Swahili."
+    },
+    {
+      "title": "Home visit",
+      "formType": "home_visit",
+      "description": "Each time you visit",
+      "icon": "stethoscope",
+      "color": "#B45309",
+      "languages": [
+        "sw"
+      ],
+      "brief": "One record per visit.\nPage 1: visit date (required), household head name (text, required).\nPage 2: Is anyone sick today? Yes/No (required). If yes: which symptoms (multiple choice: fever, cough, diarrhoea, rash, other), and if other is picked ask 'Other symptom' (text). Temperature in °C (number 34 to 43, optional).\nPage 3: Referred to a clinic? Yes/No (required). If yes, which clinic (text). A photo of the referral slip (optional). Notes (text, optional).\nTranslate labels to Swahili."
+    }
+  ]
+}

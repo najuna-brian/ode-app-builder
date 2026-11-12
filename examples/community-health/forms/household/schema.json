@@ -1,0 +1,21 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Register household",
+  "version": "1",
+  "type": "object",
+  "properties": {
+    "village": { "type": "string", "title": "Village name", "minLength": 1 },
+    "head_name": { "type": "string", "title": "Head of household name", "minLength": 1 },
+    "phone": { "type": "string", "title": "Phone number" },
+    "household_size": { "type": "integer", "title": "How many people live in the household?", "minimum": 1, "maximum": 40 },
+    "has_under5": { "type": "string", "title": "Are there children under 5?", "oneOf": [{ "const": "yes", "title": "Yes" }, { "const": "no", "title": "No" }] },
+    "under5_count": { "type": "integer", "title": "How many children under 5?", "minimum": 1, "maximum": 20 },
+    "location": { "type": "string", "format": "gps", "title": "Location of the house" },
+    "consent": { "type": "string", "title": "Does the household agree to take part?", "oneOf": [{ "const": "yes", "title": "Yes" }, { "const": "no", "title": "No" }] },
+    "no_consent_reason": { "type": "string", "title": "Why not?" }
+  },
+  "required": ["village", "head_name", "household_size", "has_under5", "consent"],
+  "allOf": [
+    { "if": { "properties": { "has_under5": { "const": "yes" } }, "required": ["has_under5"] }, "then": { "required": ["under5_count"] } }
+  ]
+}

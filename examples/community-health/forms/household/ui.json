@@ -1,0 +1,39 @@
+{
+  "type": "SwipeLayout",
+  "options": { "headerTitle": "Register household" },
+  "translations": { "sw": { "headerTitle": "Sajili kaya" } },
+  "elements": [
+    {
+      "type": "VerticalLayout",
+      "elements": [
+        { "type": "Control", "scope": "#/properties/village", "label": "Village name", "translations": { "sw": { "label": "Jina la kijiji" } } },
+        { "type": "Control", "scope": "#/properties/head_name", "label": "Head of household name", "translations": { "sw": { "label": "Jina la mkuu wa kaya" } } },
+        { "type": "Control", "scope": "#/properties/phone", "label": "Phone number", "translations": { "sw": { "label": "Namba ya simu" } } },
+        { "type": "Control", "scope": "#/properties/household_size", "label": "How many people live in the household?", "translations": { "sw": { "label": "Watu wangapi wanaishi katika kaya?" } } }
+      ]
+    },
+    {
+      "type": "VerticalLayout",
+      "elements": [
+        { "type": "Control", "scope": "#/properties/has_under5", "label": "Are there children under 5?", "translations": { "sw": { "label": "Kuna watoto chini ya miaka 5?", "options": { "oneOf": [{ "const": "yes", "title": "Ndiyo" }, { "const": "no", "title": "Hapana" }] } } } },
+        {
+          "type": "Control", "scope": "#/properties/under5_count", "label": "How many children under 5?",
+          "translations": { "sw": { "label": "Watoto wangapi chini ya miaka 5?" } },
+          "rule": { "effect": "SHOW", "condition": { "scope": "#/properties/has_under5", "schema": { "const": "yes" } } }
+        },
+        { "type": "Control", "scope": "#/properties/location", "label": "Location of the house", "translations": { "sw": { "label": "Mahali nyumba ilipo" } } }
+      ]
+    },
+    {
+      "type": "VerticalLayout",
+      "elements": [
+        { "type": "Control", "scope": "#/properties/consent", "label": "Does the household agree to take part?", "translations": { "sw": { "label": "Je, kaya inakubali kushiriki?", "options": { "oneOf": [{ "const": "yes", "title": "Ndiyo" }, { "const": "no", "title": "Hapana" }] } } } },
+        {
+          "type": "Control", "scope": "#/properties/no_consent_reason", "label": "Why not?",
+          "translations": { "sw": { "label": "Kwa nini?" } },
+          "rule": { "effect": "SHOW", "condition": { "scope": "#/properties/consent", "schema": { "const": "no" } } }
+        }
+      ]
+    }
+  ]
+}

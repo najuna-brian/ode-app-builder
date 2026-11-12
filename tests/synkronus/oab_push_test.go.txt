@@ -1,0 +1,36 @@
+package appbundle
+
+import (
+	"context"
+	"os"
+	"path/filepath"
+	"strings"
+	"testing"
+
+	"github.com/opendataensemble/synkronus/pkg/logger"
+	"github.com/stretchr/testify/require"
+)
+
+// Pushes zips listed in OAB_ZIPS (colon separated) through the real Synkronus upload path.
+func TestOABPush(t *testing.T) {
+	zips := os.Getenv("OAB_ZIPS")
+	if zips == "" {
+		t.Skip("OAB_ZIPS not set")
+	}
+	tempDir := t.TempDir()
+	service := NewService(Config{BundlePath: filepath.Join(tempDir, "bundle"), VersionsPath: filepath.Join(tempDir, "versions"), MaxVersions: 5}, logger.NewLogger())
+	require.NoError(t, service.Initialize(context.Background()))
+	for _, z := range strings.Split(zips, ":") {
+		f, err := os.Open(z)
+		require.NoError(t, err)
+		m, err := service.PushBundle(context.Background(), f)
+		f.Close()
+		require.NoError(t, err, z)
+		t.Logf("pushed %s: version %s, %d files", filepath.Base(z), m.Version, len(m.Files))
+		info, err := service.GetLatestAppInfo(context.Background())
+		require.NoError(t, err)
+		for name, form := range info.Forms {
+			t.Logf("  form %s: %+v", name, form)
+		}
+	}
+}

@@ -1,0 +1,25 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Home visit",
+  "version": "1",
+  "type": "object",
+  "properties": {
+    "visit_date": { "type": "string", "format": "date", "title": "Visit date" },
+    "head_name": { "type": "string", "title": "Head of household name", "minLength": 1 },
+    "anyone_sick": { "type": "string", "title": "Is anyone sick today?", "oneOf": [{ "const": "yes", "title": "Yes" }, { "const": "no", "title": "No" }] },
+    "symptoms": {
+      "type": "array", "title": "Which symptoms?", "uniqueItems": true,
+      "items": { "type": "string", "oneOf": [
+        { "const": "fever", "title": "Fever" }, { "const": "cough", "title": "Cough" }, { "const": "diarrhoea", "title": "Diarrhoea" },
+        { "const": "rash", "title": "Rash" }, { "const": "other", "title": "Other" }
+      ] }
+    },
+    "symptom_other": { "type": "string", "title": "Other symptom" },
+    "temperature_c": { "type": "number", "title": "Temperature (°C)", "minimum": 34, "maximum": 43 },
+    "referred": { "type": "string", "title": "Referred to a clinic?", "oneOf": [{ "const": "yes", "title": "Yes" }, { "const": "no", "title": "No" }] },
+    "clinic": { "type": "string", "title": "Which clinic?" },
+    "referral_photo": { "type": "object", "format": "photo", "title": "Photo of the referral slip" },
+    "notes": { "type": "string", "title": "Notes" }
+  },
+  "required": ["visit_date", "head_name", "anyone_sick", "referred"]
+}
