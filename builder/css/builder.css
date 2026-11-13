@@ -690,3 +690,7 @@ body.in-form .apptabs { display: none; }
 .preview-error b { color: #b91c1c; }
 .preview-error button { align-self: flex-start; }
 .acc-b > .designs { margin-bottom: 18px; }
+.fp-inline.dark { background: #121212; }
+.fp-inline.dark .fp-bar { background: #1c1d1f; color: #ececec; border-color: #2c2d30; }
+.fp-inline.dark .fp-title small, .fp-inline.dark .icon-btn { color: #a9a9a9; }
+.fp-inline.dark .fp-lang { background-color: #26272a; color: #ececec; border-color: #3a3b3e; }

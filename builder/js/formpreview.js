@@ -25,14 +25,16 @@
     });
   }
 
-  function close() {
+  /** byUser: the person closed it (close button, Escape, the device's Back), not the builder. */
+  function close(byUser) {
     if (!state) return;
+    byUser = byUser === true || (byUser && typeof byUser === 'object' && 'type' in byUser);
     window.removeEventListener('message', state.onMsg);
     document.removeEventListener('keydown', state.onKey);
     state.overlay.remove();
     document.body.classList.remove('fp-open');
-    if (state.onClose) try { state.onClose(); } catch (e) { /* ignore */ }
-    var back = state.returnFocus;
+    if (state.onClose) try { state.onClose(byUser); } catch (e) { /* ignore */ }
+    var back = state.quiet ? null : state.returnFocus;
     state = null;
     if (back && back.focus) back.focus();
   }
@@ -69,7 +71,7 @@
     closeBtn.innerHTML = '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>';
     var result = el('div', { class: 'fp-result', hidden: '' });
     var overlay = inline
-      ? el('div', { class: 'fp-inline', role: 'region', 'aria-label': 'Try the form: ' + f.title }, [
+      ? el('div', { class: 'fp-inline' + (dark ? ' dark' : ''), role: 'region', 'aria-label': 'Try the form: ' + f.title }, [
           el('div', { class: 'fp-bar' }, [closeBtn, el('div', { class: 'fp-title' }, [el('b', { text: f.title }), el('small', { text: 'Nothing is saved' })]), langSel, restart]),
           el('div', { class: 'fp-stage' }, [frame, status, result]),
         ])
@@ -140,9 +142,9 @@
         default: return reply(win, t, id, { error: 'Not available in the builder preview: ' + t });
       }
     }
-    function onKey(e) { if (e.key === 'Escape') close(); }
+    function onKey(e) { if (e.key === 'Escape') close(true); }
 
-    state = { overlay: overlay, onMsg: onMsg, onKey: onKey, returnFocus: document.activeElement, onClose: opts.onClose };
+    state = { overlay: overlay, onMsg: onMsg, onKey: onKey, returnFocus: document.activeElement, onClose: opts.onClose, quiet: !!opts.quiet, formType: f.formType };
     window.addEventListener('message', onMsg);
     document.addEventListener('keydown', onKey);
 
@@ -157,19 +159,28 @@
         var base = new URL(BASE, location.href).toString();
         var json = function (v) { return JSON.stringify(v).replace(/</g, '\\u003c'); };
         var stub = '<!--ode-formplayer-host-stub-->' +
+          // Keep the form player's history to itself, so the browser's Back stays in the builder.
+          '<script>(function(){var r=history.replaceState.bind(history);history.pushState=function(s,t,u){r(s,t,u)};})();</script>' +
           '<script>window.__odeProfileId="builder_preview";window.__odeLegacyWebStorageProfileId=null;window.__odeDeletedProfileIds=[];</script>' +
           '<script id="ode-formplayer-init-data" type="application/json">' + json(init) + '</script>' +
           '<script src="' + base + 'formplayer-host-stub.js"></script>' +
           '<script src="' + base + 'formulus-injection.js"></script>';
-        frame.srcdoc = html.replace(/<head[^>]*>/i, function (m) { return m + '<base href="' + base + '">' + stub; });
+        // A fresh iframe each start, so restarting never adds to the browser's history
+        var next = frame.cloneNode(false);
+        next.srcdoc = html.replace(/<head[^>]*>/i, function (m) { return m + '<base href="' + base + '">' + stub; });
+        frame.replaceWith(next);
+        frame = next;
         setTimeout(function () { if (status.textContent.indexOf('Loading') === 0) status.textContent = ''; }, 6000);
       }).catch(function (e) {
         status.textContent = e.message;
       });
     }
     start();
-    closeBtn.focus();
+    if (!opts.quiet) closeBtn.focus();
   }
 
-  root.OdeFormPreview = { available: available, open: open, close: close };
+  /** The form type open now, or null. */
+  function current() { return state ? state.formType : null; }
+
+  root.OdeFormPreview = { available: available, open: open, close: close, current: current };
 })(typeof self !== 'undefined' ? self : this);

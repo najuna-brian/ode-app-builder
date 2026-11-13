@@ -292,14 +292,17 @@
     if (r.view === 'home' && project) { flush(); project = null; appId = null; }
     document.body.setAttribute('data-view', r.view);
     document.body.classList.toggle('in-form', r.view === 'app' && r.form !== null);
-    if (window.OdeFormPreview) window.OdeFormPreview.close();
+    var keepForm = r.view === 'app' && r.form !== null && project && project.forms[r.form] ? project.forms[r.form].formType : null;
+    if (keepForm !== autoFormFor) autoFormOff = null;
+    autoFormFor = keepForm;
+    if (window.OdeFormPreview && window.OdeFormPreview.current() !== keepForm) window.OdeFormPreview.close();
     togglePreviewSheet(false);
     content.replaceChildren();
     append(content, r.view === 'new' ? renderWizard(r) : r.view === 'app' ? renderApp(r) : renderAppsHome());
     document.getElementById('btnSave').hidden = !project;
     document.getElementById('btnOpen').hidden = !!project;
     document.getElementById('btnPreview').hidden = !project;
-    if (project) { document.title = (project.app.name || 'New app') + ' · ODE App Builder'; save(); }
+    if (project) { document.title = (project.app.name || 'New app') + ' · ODE App Builder'; save(); setTimeout(showSelectedForm, 0); }
     else document.title = 'ODE App Builder';
   }
 
@@ -567,6 +570,8 @@
       statusEl.textContent = s.text;
       tryBtn.disabled = !f.schemaText;
       schedulePreview();
+      clearTimeout(formRefreshTimer);
+      formRefreshTimer = setTimeout(function () { showSelectedForm(true); }, 700);
     }
     var head = h('div', { class: 'formhead' },
       h('button', { type: 'button', class: 'link-back', onclick: function () { goApp({ tab: 'forms' }); } }, ic('arrow-left', 16), 'All forms'),
@@ -1618,7 +1623,12 @@
     dv.style.setProperty('--dv-bar', dark ? '#121212' : project.brand.primary);
     dv.style.setProperty('--dv-on', dark ? '#e8e8e8' : B.onColor(project.brand.primary));
     dv.classList.toggle('dark', dark);
-    frame.srcdoc = html;
+    // A fresh iframe each time: reloading the old one would add an entry to the browser's history,
+    // and Back would then step through preview reloads instead of builder screens.
+    var next = frame.cloneNode(false);
+    next.removeAttribute('srcdoc');
+    next.srcdoc = html;
+    frame.replaceWith(next);
   }
 
   window.addEventListener('message', function (e) {
@@ -1642,13 +1652,35 @@
     if (window.OdeFormPreview && window.OdeFormPreview.available()) {
       var pane = document.getElementById('previewPane');
       if (!pane.getClientRects().length || getComputedStyle(pane).display === 'none') togglePreviewSheet(true);
-      return window.OdeFormPreview.open(project, f, data, { dark: document.getElementById('previewDark').checked, mount: pane.querySelector('.phone') });
+      autoFormOff = null;
+      return window.OdeFormPreview.open(project, f, data, { dark: document.getElementById('previewDark').checked, mount: pane.querySelector('.phone'), onClose: formClosed(f) });
     }
     dialog([
       h('h2', { class: 'row' }, formIcon(f, 20), f.title),
       h('p', { class: 'hint' }, 'On a phone this opens the form full screen in Formulus, one page at a time.'),
       outline(f),
     ]);
+  }
+
+  /* The device shows the form you are working on, and follows your edits. */
+  var autoFormOff = null; // a form the person closed in the device: stay on the app until they move on
+  var autoFormFor = null;
+  var formRefreshTimer;
+  function formClosed(f) { return function (byUser) { if (byUser) autoFormOff = f.formType; }; }
+  function previewShowing() {
+    var pane = document.getElementById('previewPane');
+    return !!pane.getClientRects().length && getComputedStyle(pane).display !== 'none';
+  }
+  function showSelectedForm(refresh) {
+    if (!project || !window.OdeFormPreview || !window.OdeFormPreview.available()) return;
+    if (route.view !== 'app' || route.form === null) return;
+    var f = project.forms[route.form];
+    if (!f || autoFormOff === f.formType || !previewShowing()) return;
+    var open = window.OdeFormPreview.current() === f.formType;
+    if (open && !refresh) return;
+    var st = formStatus(f);
+    if (!f.schemaText || !st.result || !st.result.summary) { if (open) window.OdeFormPreview.close(); return; }
+    window.OdeFormPreview.open(project, f, null, { dark: document.getElementById('previewDark').checked, mount: document.querySelector('#previewPane .phone'), quiet: true, onClose: formClosed(f) });
   }
 
   /* Phones and tablets: the preview opens full screen from the Preview button in the top bar. */
@@ -1658,7 +1690,7 @@
     document.body.classList.toggle('preview-open', o);
     document.getElementById('btnPreview').setAttribute('aria-expanded', o ? 'true' : 'false');
     if (!o && window.OdeFormPreview) window.OdeFormPreview.close();
-    if (o) renderPreview();
+    if (o) { renderPreview(); showSelectedForm(); }
   }
   document.getElementById('btnPreview').addEventListener('click', function () { togglePreviewSheet(); });
   document.getElementById('previewClose').addEventListener('click', function () {
@@ -1668,8 +1700,11 @@
   document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && document.body.classList.contains('preview-open') && !document.querySelector('.fp-inline')) togglePreviewSheet(false); });
 
   document.getElementById('previewDark').addEventListener('change', function () {
-    if (window.OdeFormPreview) window.OdeFormPreview.close();
+    var open = window.OdeFormPreview && window.OdeFormPreview.current();
     renderPreview();
+    if (!open) return;
+    var f = project.forms.filter(function (x) { return x.formType === open; })[0];
+    if (f) window.OdeFormPreview.open(project, f, null, { dark: this.checked, mount: document.querySelector('#previewPane .phone'), quiet: true, onClose: formClosed(f) });
   });
 
   /* The device around the preview: size, rotation, and the Android Back and Home buttons. */
@@ -1682,7 +1717,7 @@
     toastTimerDv = setTimeout(function () { t.hidden = true; }, 2200);
   }
   function previewHome() {
-    if (window.OdeFormPreview) window.OdeFormPreview.close();
+    if (window.OdeFormPreview) window.OdeFormPreview.close(true);
     lastPreviewHash = '#/';
     renderPreview();
   }
@@ -1696,14 +1731,20 @@
     meta: document.getElementById('pvMeta'),
     isBare: function () { return narrow.matches; },
     onBack: function () {
-      if (document.querySelector('#previewPane .fp-inline')) { window.OdeFormPreview.close(); return; }
+      if (document.querySelector('#previewPane .fp-inline')) { window.OdeFormPreview.close(true); return; }
       var w = document.getElementById('previewFrame').contentWindow;
       if (w) w.postMessage({ odePreview: 'back' }, '*');
     },
     onHome: previewHome,
   });
   if (narrow.addEventListener) narrow.addEventListener('change', deviceView.layout);
-  document.getElementById('pvRestart').addEventListener('click', previewHome);
+  document.getElementById('pvRestart').addEventListener('click', function () {
+    var open = window.OdeFormPreview && window.OdeFormPreview.current();
+    if (!open) return previewHome();
+    renderPreview();
+    var f = project.forms.filter(function (x) { return x.formType === open; })[0];
+    if (f) window.OdeFormPreview.open(project, f, null, { dark: document.getElementById('previewDark').checked, mount: document.querySelector('#previewPane .phone'), quiet: true, onClose: formClosed(f) });
+  });
   document.getElementById('pvExpand').addEventListener('click', function () {
     var on = document.body.classList.toggle('preview-full');
     this.setAttribute('aria-pressed', on ? 'true' : 'false');

@@ -229,6 +229,15 @@ async function checkRuntime(browser, appDir, label, errors) {
   await page.locator('[data-nav=back]').click();
   await page.locator('.dv-toast:not([hidden])').waitFor();
   assert.equal(await page.evaluate(() => history.length), before, 'the preview never adds to the builder history');
+  // Opening a form shows it in the device; dark mode keeps it there
+  await page.locator('.form-row[data-form=household]').click();
+  await page.waitForFunction(() => window.OdeFormPreview.current() === 'household');
+  await page.locator('.pv-dark').click();
+  await page.locator('#previewPane .fp-inline.dark').waitFor();
+  assert.equal(await page.evaluate(() => window.OdeFormPreview.current()), 'household');
+  await page.locator('.pv-dark').click();
+  await page.locator('.link-back').click();
+  await page.waitForFunction(() => window.OdeFormPreview.current() === null);
   await page.locator('[data-apptab=publish]').click();
 
   // Phone layout: no sideways scroll on any screen
