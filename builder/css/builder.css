@@ -63,16 +63,75 @@ body[data-view=new] #btnSave { display: none; }
 /* Layout */
 .layout { display: grid; grid-template-columns: minmax(0, 1fr) 380px; min-height: calc(100vh - 60px); }
 body[data-view='home'] .layout { grid-template-columns: minmax(0, 1fr); }
-body[data-view='home'] .preview { display: none; }
-.content { padding: 28px 40px 80px; outline: none; width: 100%; max-width: 820px; margin: 0 auto; }
-.preview { border-left: 1px solid var(--line); background: var(--panel); padding: 20px; position: sticky; top: 60px; height: calc(100vh - 60px); overflow: auto; }
-.preview-head { display: flex; justify-content: space-between; align-items: center; gap: 10px; font-weight: 600; font-size: 0.9rem; margin-bottom: 14px; }
-.preview-head > span { flex: 1; }
-.switch { font-weight: 400; color: var(--muted); font-size: 0.86rem; display: flex; gap: 6px; align-items: center; cursor: pointer; }
-.phone { position: relative; width: 320px; height: 640px; max-height: calc(100vh - 170px); margin: 0 auto; border: 9px solid #2a211a; border-radius: 34px; overflow: hidden; background: #fff; box-shadow: 0 14px 36px rgb(60 40 20 / 18%); }
-.phone iframe { width: 100%; height: 100%; border: 0; display: block; }
-.preview-note { color: var(--muted); font-size: 0.8rem; text-align: center; margin: 12px 8px 0; line-height: 1.45; }
+body[data-view='home'] .preview, body[data-view='home'] .pv-bar { display: none; }
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.preview { border-left: 1px solid var(--line); background: #f1ece2; padding: 0; position: sticky; top: 60px; height: calc(100vh - 60px); display: flex; flex-direction: column; overflow: hidden; }
 .preview-btn, .preview-close { display: none; }
+
+/* Device preview toolbar */
+.pv-bar { display: flex; align-items: center; gap: 2px; padding: 10px 10px 8px 12px; }
+.pv-bar select { flex: 1; min-width: 0; height: 36px; font-size: 0.86rem; padding: 0 28px 0 10px; background-color: var(--panel); }
+.pv-bar .icon-btn { width: 36px; height: 36px; flex: none; color: var(--muted); }
+.pv-bar .icon-btn:hover { color: var(--ink); }
+.pv-bar .icon-btn:disabled { opacity: 0.35; cursor: default; }
+.pv-dark { display: inline-grid; place-items: center; cursor: pointer; border-radius: 8px; }
+.pv-dark:has(input:checked), .pv-expand[aria-pressed=true] { color: var(--accent); background: var(--accent-soft); }
+.pv-dark:has(input:focus-visible) { outline: 2px solid var(--accent); outline-offset: 1px; }
+.pv-stage { flex: 1; min-height: 0; display: flex; align-items: center; justify-content: center; padding: 6px 16px 10px; overflow: hidden; }
+.pv-scaler { position: relative; flex: none; }
+.pv-meta { margin: 0; padding: 0 12px 12px; text-align: center; font-size: 0.74rem; color: var(--muted); font-variant-numeric: tabular-nums; min-height: 1.2em; }
+
+/* The device: drawn with CSS only, laid out at its real size and scaled to fit */
+.device { position: absolute; top: 0; left: 0; transform-origin: 0 0; box-sizing: border-box; padding: var(--bezel, 11px); background: #16181b; border-radius: 52px;
+  box-shadow: inset 0 0 0 1.5px #3a3d42, inset 0 0 0 4px #0b0c0e, 0 0 0 1px #050506, 0 18px 40px rgb(30 20 10 / 22%), 0 4px 10px rgb(30 20 10 / 12%); }
+.device::before, .device::after { content: ''; position: absolute; right: -3px; width: 3px; border-radius: 0 2px 2px 0; background: #2a2d31; }
+.device::before { top: 22%; height: 9%; }
+.device::after { top: 34%; height: 5%; }
+.dv-screen { position: relative; width: 100%; height: 100%; display: flex; flex-direction: column; overflow: hidden; border-radius: 41px; background: #fff; }
+.dv-status { flex: none; height: 26px; display: flex; align-items: center; justify-content: space-between; padding: 0 20px 0 26px; font: 600 13px/1 system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif; color: var(--dv-on, #fff); background: var(--dv-bar, #3b7a4b); position: relative; }
+.dv-icons { display: inline-flex; gap: 5px; align-items: center; }
+.dv-cam { position: absolute; left: 50%; top: 6px; width: 13px; height: 13px; margin-left: -6.5px; border-radius: 50%; background: #0b0c0e; box-shadow: inset 0 0 0 2px #1d2024, inset 2px -2px 0 3px #12161c; }
+.phone { position: relative; flex: 1; min-height: 0; background: #fff; overflow: hidden; }
+.phone iframe { width: 100%; height: 100%; border: 0; display: block; }
+.dv-nav { flex: none; height: 44px; display: flex; align-items: center; justify-content: center; gap: 56px; background: var(--dv-nav, #f4f4f4); color: var(--dv-nav-on, #3c3c3c); }
+.dv-nav button, .dv-recent { display: inline-grid; place-items: center; width: 40px; height: 36px; border: 0; border-radius: 18px; background: none; color: inherit; cursor: pointer; padding: 0; }
+.dv-nav button:hover, .dv-nav button:focus-visible { background: rgb(128 128 128 / 18%); outline: none; }
+.dv-recent { cursor: default; opacity: 0.55; }
+.dv-toast { position: absolute; left: 50%; bottom: 60px; transform: translateX(-50%); z-index: 9; max-width: 80%; padding: 9px 14px; border-radius: 18px; background: rgb(32 32 32 / 92%); color: #fff; font: 13px/1.35 system-ui, sans-serif; text-align: center; }
+.device.dark .dv-nav { --dv-nav: #101112; --dv-nav-on: #e6e6e6; }
+/* iPhone SE: home button era, no punch-hole camera, no 3-button bar */
+.device.ios { border-radius: 56px; }
+.device.ios .dv-screen { border-radius: 4px; }
+.device.ios .dv-cam { display: none; }
+.dv-homebtn { display: none; }
+.device[data-kind=phone].ios .dv-homebtn { display: block; position: absolute; left: 50%; bottom: 9px; width: 46px; height: 46px; margin-left: -23px; border-radius: 50%; box-shadow: inset 0 0 0 2px #2c2f34; }
+.device[data-kind=phone].ios[data-orient=landscape] .dv-homebtn { left: auto; right: 9px; bottom: 50%; margin: 0 0 -23px; }
+.device.ios .dv-nav { display: none; }
+.device.ios .dv-status { justify-content: space-between; padding: 0 12px; }
+/* Tablets: wider bezel, camera in the frame */
+.device[data-kind=tablet] { border-radius: 36px; }
+.device[data-kind=tablet] .dv-screen { border-radius: 14px; }
+.device[data-kind=tablet] .dv-cam { top: calc(var(--bezel) / -2 - 4px); width: 8px; height: 8px; margin-left: -4px; }
+.device[data-kind=tablet][data-orient=landscape] .dv-cam { left: calc(var(--bezel) / -2 - 4px); top: 50%; margin: -4px 0 0; }
+.device[data-kind=tablet] .dv-status { overflow: visible; }
+.device[data-kind=tablet].ios .dv-screen { border-radius: 10px; }
+.device[data-orient=landscape]::before, .device[data-orient=landscape]::after { right: auto; top: -3px; width: auto; height: 3px; border-radius: 2px 2px 0 0; }
+.device[data-orient=landscape]::before { right: 22%; left: auto; width: 9%; }
+.device[data-orient=landscape]::after { right: 34%; left: auto; width: 5%; }
+.device[data-kind=phone][data-orient=landscape] .dv-cam { left: 12px; top: 50%; margin: -6.5px 0 0; }
+/* Bare: on phones the preview fills the screen with no frame */
+.device[data-kind=bare] { padding: 0; border-radius: 12px; background: none; box-shadow: 0 0 0 1px var(--line); }
+.device[data-kind=bare]::before, .device[data-kind=bare]::after, .device[data-kind=bare] .dv-status, .device[data-kind=bare] .dv-nav { display: none; }
+.device[data-kind=bare] .dv-screen { border-radius: 12px; }
+
+/* Bigger preview: the device view over the whole builder */
+body.preview-full .preview { position: fixed; inset: 60px 0 0; z-index: 40; height: auto; border: 0; background: #ebe5d9; }
+body.preview-full .pv-bar { width: min(640px, 100%); margin: 0 auto; }
+.pv-bar .preview-close { display: none; }
+.pv-title { display: none; flex: 1; font-weight: 600; font-size: 0.95rem; }
+@media (max-width: 760px) { .pv-title { display: block; } .pv-bar select, #pvRotate, .pv-meta { display: none; } }
+body.preview-full .pv-bar .preview-close { display: inline-grid; }
+.content { padding: 28px 40px 80px; outline: none; width: 100%; max-width: 820px; margin: 0 auto; }
 
 /* Buttons */
 button.primary, button.ghost, button.secondary, button.danger {
@@ -532,12 +591,13 @@ body.in-form .apptabs { display: none; }
 /* Tablets and small laptops: the preview opens full screen */
 @media (max-width: 1180px) {
   .layout { grid-template-columns: minmax(0, 1fr); }
-  .preview { position: fixed; inset: 0; z-index: 40; height: auto; border: 0; display: none; padding: 12px 16px calc(12px + env(safe-area-inset-bottom)); background: var(--bg); }
+  .preview { position: fixed; inset: 0; z-index: 40; height: auto; border: 0; display: none; padding: 0 0 env(safe-area-inset-bottom); background: #ebe5d9; }
+  .pv-expand { display: none; }
+  .pv-bar { padding: 10px 12px 8px; width: min(640px, 100%); margin: 0 auto; }
   body.preview-open .preview { display: flex; flex-direction: column; }
   body.preview-open { overflow: hidden; }
   .preview-btn:not([hidden]) { display: inline-flex; }
-  .preview-close { display: inline-grid; }
-  .phone { width: min(380px, 100%); height: auto; flex: 1; max-height: 760px; }
+  .preview-close, .pv-bar .preview-close { display: inline-grid; }
 }
 @media (max-width: 900px) {
   .fp-stage { flex-direction: column; align-items: center; padding: 0; gap: 0; }
@@ -596,7 +656,6 @@ body.in-form .apptabs { display: none; }
   .tr-cell small { display: block; margin-bottom: 3px; }
   .wf-row { grid-template-columns: 1fr; gap: 4px; }
   .gform { margin-left: calc(var(--depth) * 12px); padding: 10px; }
-  .preview .phone { width: 100%; border-width: 0; border-radius: 14px; max-height: none; }
   /* Comfortable touch targets */
   button.primary, button.ghost, button.secondary, button.danger { height: 44px; }
   button.big { height: 50px; }
@@ -612,7 +671,7 @@ body.in-form .apptabs { display: none; }
   .sheet-foot .primary { width: 100%; }
   #toast { bottom: calc(84px + env(safe-area-inset-bottom)); }
   .snippets button, .ai-links a { height: 38px; }
-  .preview-head input[type=checkbox], #previewDark { width: 20px; height: 20px; }
+  .pv-bar .icon-btn { width: 42px; height: 42px; }
 }
 @media (max-width: 380px) {
   .brandmark span { font-size: 0.92rem; }
@@ -631,7 +690,3 @@ body.in-form .apptabs { display: none; }
 .preview-error b { color: #b91c1c; }
 .preview-error button { align-self: flex-start; }
 .acc-b > .designs { margin-bottom: 18px; }
-
-/* Shared ODE footer: only on the home screen, so the editor stays focused */
-body:not([data-view='home']) .ode-foot { display: none; }
-.ode-next[hidden] { display: none; }

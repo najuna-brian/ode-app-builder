@@ -335,8 +335,7 @@
         h('img', { src: 'img/ode-128.png', alt: '', class: 'hero-logo', width: 64, height: 64 }),
         h('div', {},
           h('h1', {}, apps.length ? 'Your apps' : 'Make an ODE app'),
-          h('p', { class: 'lead' }, 'Make your app, add the forms your team fills in, then publish it to your Synkronus server. No code needed. ',
-            h('a', { href: 'https://ode-server.nahati.online/tutorials/' }, 'Watch the tutorials')))),
+          h('p', { class: 'lead' }, 'Make your app, add the forms your team fills in, then publish it to your Synkronus server. No code needed.'))),
       apps.length ? null : h('ol', { class: 'how3' },
         h('li', {}, h('b', {}, 'Make the app'), h('span', {}, 'Name, logo and colours.')),
         h('li', {}, h('b', {}, 'Add forms'), h('span', {}, 'Describe them; any AI writes them.')),
@@ -913,13 +912,9 @@
           try { f.shipped = { version: String(JSON.parse(f.schemaText).version || '1'), text: f.schemaText + f.uiText }; } catch (e) { /* ignore */ }
         });
         save();
-        nextCard.hidden = false;
         toast('Downloaded ' + names.bundle);
       }).catch(function (e) { toast('Could not build the zip: ' + e.message); });
     } }, ic('download', 18), 'Download app bundle');
-    var nextCard = h('div', { class: 'ode-next', hidden: 'hidden' },
-      h('div', {}, h('b', {}, 'Next: get a server for your app'), h('span', {}, 'No Synkronus server yet? Set one up in about 10 minutes, then upload this bundle.')),
-      h('a', { class: 'ode-btn primary', href: 'https://ode-server.nahati.online/', target: '_blank', rel: 'noopener' }, 'Set up your server'));
 
     return [
       h('div', { class: 'panel pub-status ' + (ready ? 'ok' : 'bad') },
@@ -933,11 +928,10 @@
         h('p', { class: 'hint' }, 'The one file you upload to Synkronus.'),
         h('div', { class: 'fname' }, names.bundle),
         bundleBtn,
-        nextCard,
         h('ol', { class: 'steps-how' },
           h('li', {}, 'Open your Synkronus portal, go to ', h('b', {}, 'App bundles'), ', upload the zip and make it active.'),
           h('li', {}, 'On each phone, open Formulus and sync. The app appears with your name, colours and forms.')),
-        h('p', { class: 'hint' }, 'Command line instead: ', h('code', {}, 'synk app-bundle upload ' + names.bundle + ' --activate'))),
+      ),
       h('div', { class: 'panel' },
         h('h3', {}, 'Other downloads'),
         h('div', { class: 'dl' },
@@ -1601,21 +1595,36 @@
       '  openFormplayer: function (t, params, data, opts) { parent.postMessage({ odePreview: "openForm", formType: t, data: data || {}, params: params || {} }, "*"); return Promise.resolve({ status: "cancelled", formType: t }); }\n' +
       '};\n' +
       'function tell() { parent.postMessage({ odePreview: "route", hash: location.hash }, "*"); }\n' +
-      'var _push = history.pushState, _rep = history.replaceState;\n' +
-      'history.pushState = function () { _push.apply(history, arguments); tell(); };\n' +
-      'history.replaceState = function () { _rep.apply(history, arguments); tell(); };\n' +
-      'addEventListener("popstate", tell);\n' +
-      'try { _rep.call(history, null, "", String(location.href).split("#")[0] + ' + JSON.stringify(lastPreviewHash) + '); } catch (e) {}\n';
+      // The preview keeps its own back stack, like Android's: Back steps one screen, and on the
+      // first screen it would close the app. The builder's own browser history is never touched.
+      'var _rep = history.replaceState, stack = [];\n' +
+      'function at(u) { return u == null ? location.href : u; }\n' +
+      'history.pushState = function (st, t, u) { _rep.call(history, st, t, at(u)); stack.push({ s: st, u: location.href }); tell(); };\n' +
+      'history.replaceState = function (st, t, u) { _rep.call(history, st, t, at(u)); stack[stack.length - 1] = { s: st, u: location.href }; tell(); };\n' +
+      'history.back = function () {\n' +
+      '  if (stack.length < 2) { parent.postMessage({ odePreview: "atRoot" }, "*"); return; }\n' +
+      '  stack.pop(); var e = stack[stack.length - 1]; _rep.call(history, e.s, "", e.u);\n' +
+      '  dispatchEvent(new PopStateEvent("popstate", { state: e.s })); dispatchEvent(new HashChangeEvent("hashchange")); tell();\n' +
+      '};\n' +
+      'history.go = function (n) { if (n < 0) for (var i = 0; i < -n; i++) history.back(); };\n' +
+      'addEventListener("message", function (e) { if (e.source === parent && e.data && e.data.odePreview === "back") history.back(); });\n' +
+      'try { _rep.call(history, null, "", String(location.href).split("#")[0] + ' + JSON.stringify(lastPreviewHash) + '); } catch (e) {}\n' +
+      'stack.push({ s: null, u: location.href });\n';
     var html = '<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">' +
       '<style>' + (tpl.runtime['runtime.css'] || '') + '</style><script>' + esc(tpl.runtime['icons.js'] || '') + '</script></head><body>' +
       (/id="root"/.test(tpl.runtime['index.html'] || '') ? '<div id="root"></div>' : '<main id="app"></main><div id="toast" hidden></div>') +
       '<script>' + esc(mock) + '</script><script>' + esc(tpl.runtime['runtime.js']) + '</script></body></html>';
+    var dv = document.getElementById('pvDeviceFrame');
+    dv.style.setProperty('--dv-bar', dark ? '#121212' : project.brand.primary);
+    dv.style.setProperty('--dv-on', dark ? '#e8e8e8' : B.onColor(project.brand.primary));
+    dv.classList.toggle('dark', dark);
     frame.srcdoc = html;
   }
 
   window.addEventListener('message', function (e) {
     var d = e.data;
     if (d && d.odePreview === 'route' && typeof d.hash === 'string') { lastPreviewHash = d.hash || '#/'; return; }
+    if (d && d.odePreview === 'atRoot' && e.source === document.getElementById('previewFrame').contentWindow) { deviceToast('Back on the first screen closes the app.'); return; }
     if (d && d.odePreview === 'error' && e.source === document.getElementById('previewFrame').contentWindow) { previewError(d.message); return; }
     if (!d || d.odePreview !== 'openForm') return;
     var f = project.forms.filter(function (x) { return x.formType === d.formType; })[0];
@@ -1652,10 +1661,59 @@
     if (o) renderPreview();
   }
   document.getElementById('btnPreview').addEventListener('click', function () { togglePreviewSheet(); });
-  document.getElementById('previewClose').addEventListener('click', function () { togglePreviewSheet(false); });
+  document.getElementById('previewClose').addEventListener('click', function () {
+    if (document.body.classList.contains('preview-full')) { document.getElementById('pvExpand').click(); return; }
+    togglePreviewSheet(false);
+  });
   document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && document.body.classList.contains('preview-open') && !document.querySelector('.fp-inline')) togglePreviewSheet(false); });
 
-  document.getElementById('previewDark').addEventListener('change', renderPreview);
+  document.getElementById('previewDark').addEventListener('change', function () {
+    if (window.OdeFormPreview) window.OdeFormPreview.close();
+    renderPreview();
+  });
+
+  /* The device around the preview: size, rotation, and the Android Back and Home buttons. */
+  var toastTimerDv;
+  function deviceToast(msg) {
+    var t = document.querySelector('#pvDeviceFrame .dv-toast');
+    t.textContent = msg;
+    t.hidden = false;
+    clearTimeout(toastTimerDv);
+    toastTimerDv = setTimeout(function () { t.hidden = true; }, 2200);
+  }
+  function previewHome() {
+    if (window.OdeFormPreview) window.OdeFormPreview.close();
+    lastPreviewHash = '#/';
+    renderPreview();
+  }
+  var narrow = window.matchMedia('(max-width: 760px)');
+  var deviceView = window.OdeDevice.init({
+    stage: document.getElementById('pvStage'),
+    scaler: document.getElementById('pvScaler'),
+    device: document.getElementById('pvDeviceFrame'),
+    select: document.getElementById('pvDevice'),
+    rotate: document.getElementById('pvRotate'),
+    meta: document.getElementById('pvMeta'),
+    isBare: function () { return narrow.matches; },
+    onBack: function () {
+      if (document.querySelector('#previewPane .fp-inline')) { window.OdeFormPreview.close(); return; }
+      var w = document.getElementById('previewFrame').contentWindow;
+      if (w) w.postMessage({ odePreview: 'back' }, '*');
+    },
+    onHome: previewHome,
+  });
+  if (narrow.addEventListener) narrow.addEventListener('change', deviceView.layout);
+  document.getElementById('pvRestart').addEventListener('click', previewHome);
+  document.getElementById('pvExpand').addEventListener('click', function () {
+    var on = document.body.classList.toggle('preview-full');
+    this.setAttribute('aria-pressed', on ? 'true' : 'false');
+    this.setAttribute('aria-label', on ? 'Smaller preview' : 'Bigger preview');
+    this.title = on ? 'Smaller preview' : 'Bigger preview';
+  });
+  document.addEventListener('keydown', function (e) {
+    if (e.key !== 'Escape' || !document.body.classList.contains('preview-full') || document.querySelector('.fp-inline')) return;
+    document.getElementById('pvExpand').click();
+  });
 
   if (location.hash !== hashOf(route)) { try { history.replaceState(null, '', hashOf(route)); } catch (e) { /* ignore */ } }
   render();

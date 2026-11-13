@@ -12,17 +12,11 @@
     <meta property="og:description" content="Make an Open Data Ensemble app without writing code. Describe your forms, let any AI write them, and publish to Synkronus." />
     <meta property="og:image" content="https://ode-app.nahati.online/img/ode-180.png" />
     <meta property="og:type" content="website" />
-    <link rel="stylesheet" href="css/ode-brand.css" />
     <link rel="stylesheet" href="css/builder.css" />
   </head>
   <body data-view="home">
     <header class="topbar">
       <a class="brandmark" href="#/" aria-label="ODE App Builder, your apps"><img src="img/ode-64.png" alt="" width="32" height="32" /><span><strong>ODE</strong> App Builder</span></a>
-      <nav class="ode-links" aria-label="ODE tools">
-        <a href="https://ode-app.nahati.online/" aria-current="page">Build your app</a>
-        <a href="https://ode-server.nahati.online/">Set up your server</a>
-        <a href="https://ode-server.nahati.online/tutorials/">Tutorials</a>
-      </nav>
       <div class="top-actions">
         <button type="button" class="ghost preview-btn" id="btnPreview" aria-controls="previewPane" aria-expanded="false" hidden><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="2" width="14" height="20" rx="2"/><path d="M12 18h.01"/></svg><span>Preview</span></button>
         <button type="button" class="ghost" id="btnOpen" title="Open a saved app file (.odeapp.json) or an app bundle (.zip)">Open<span class="long">&nbsp;a file</span></button>
@@ -33,27 +27,36 @@
 
     <div class="layout">
       <main class="content" id="content" tabindex="-1"></main>
-      <aside class="preview" id="previewPane" aria-label="Phone preview">
-        <div class="preview-head">
-          <span>Preview</span>
-          <label class="switch"><input type="checkbox" id="previewDark" /> Dark</label>
-          <button type="button" class="icon-btn preview-close" id="previewClose" aria-label="Close preview"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button>
+      <aside class="preview" id="previewPane" aria-label="App preview">
+        <div class="pv-bar">
+          <span class="pv-title">Preview</span>
+          <select id="pvDevice" aria-label="Device"></select>
+          <button type="button" class="icon-btn" id="pvRotate" aria-label="Rotate" title="Rotate"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="8" width="13" height="13" rx="2"/><path d="M8 3h3a8 8 0 0 1 8 8v1"/><path d="m16 9 3 3 3-3"/></svg></button>
+          <label class="icon-btn pv-dark" title="Dark mode"><input type="checkbox" id="previewDark" class="sr-only" aria-label="Dark mode" /><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg></label>
+          <button type="button" class="icon-btn" id="pvRestart" aria-label="Start again" title="Start again"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg></button>
+          <button type="button" class="icon-btn pv-expand" id="pvExpand" aria-label="Bigger preview" title="Bigger preview" aria-pressed="false"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 3h6v6"/><path d="M9 21H3v-6"/><path d="m21 3-7 7"/><path d="m3 21 7-7"/></svg></button>
+          <button type="button" class="icon-btn preview-close" id="previewClose" aria-label="Close preview"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button>
         </div>
-        <div class="phone"><iframe id="previewFrame" title="App preview" sandbox="allow-scripts"></iframe></div>
-        <p class="preview-note">Tap through it like a phone. Forms open in the real ODE form player.</p>
+        <div class="pv-stage" id="pvStage">
+          <div class="pv-scaler" id="pvScaler">
+            <div class="device" id="pvDeviceFrame" data-kind="phone">
+              <span class="dv-homebtn" aria-hidden="true"></span>
+              <div class="dv-screen">
+                <div class="dv-status" aria-hidden="true"><span class="dv-time">9:41</span><span class="dv-cam"></span><span class="dv-icons"><svg viewBox="0 0 16 12" width="15" height="11"><path d="M1 11h2V8H1zM5 11h2V6H5zM9 11h2V3H9zM13 11h2V1h-2z" fill="currentColor"/></svg><svg viewBox="0 0 16 12" width="15" height="11"><path d="M8 11 1 4a10 10 0 0 1 14 0z" fill="currentColor"/></svg><svg viewBox="0 0 22 12" width="21" height="11"><rect x="0.5" y="0.5" width="18" height="11" rx="2.5" fill="none" stroke="currentColor"/><rect x="2" y="2" width="13" height="8" rx="1.2" fill="currentColor"/><rect x="19.5" y="4" width="2" height="4" rx="1" fill="currentColor"/></svg></span></div>
+                <div class="phone"><iframe id="previewFrame" title="App preview" sandbox="allow-scripts"></iframe></div>
+                <div class="dv-nav">
+                  <button type="button" data-nav="back" aria-label="Back" title="Back"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M16 4 7 12l9 8z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg></button>
+                  <button type="button" data-nav="home" aria-label="Home" title="Home"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><circle cx="12" cy="12" r="7.5" fill="none" stroke="currentColor" stroke-width="2"/></svg></button>
+                  <span class="dv-recent" aria-hidden="true"><svg viewBox="0 0 24 24" width="18" height="18"><rect x="5.5" y="5.5" width="13" height="13" rx="2" fill="none" stroke="currentColor" stroke-width="2"/></svg></span>
+                </div>
+                <div class="dv-toast" role="status" hidden></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <p class="pv-meta" id="pvMeta" aria-live="polite"></p>
       </aside>
     </div>
-
-    <footer class="ode-foot">
-      <p class="ode-foot-title"><img src="img/ode-64.png" alt="" width="24" height="24" />Community tools for Open Data Ensemble</p>
-      <nav aria-label="Project links">
-        <a href="https://opendataensemble.org">opendataensemble.org</a>
-        <a href="https://github.com/najuna-brian/ode-app-builder">App Builder on GitHub</a>
-        <a href="https://github.com/najuna-brian/ode-server-setup">Server setup on GitHub</a>
-        <a href="https://github.com/OpenDataEnsemble/synkronus-quickstart">synkronus-quickstart</a>
-      </nav>
-      <p class="ode-credit">Hosted and supported by <a href="https://nahati.online">Nahati Technologies</a> as a contribution to Open Data Ensemble. We claim no ownership; all code is open source under its original licences and the ODE project may adopt, move or rehost these tools at any time.</p>
-    </footer>
 
     <dialog id="dialog"><div id="dialogBody"></div></dialog>
     <div id="toast" role="status" hidden></div>
@@ -70,6 +73,7 @@
     <script src="js/editor.js"></script>
     <script src="js/xlsform.js"></script>
     <script src="js/formpreview.js"></script>
+    <script src="js/devices.js"></script>
     <script src="js/app.js"></script>
   </body>
 </html>

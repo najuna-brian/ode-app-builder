@@ -131,11 +131,11 @@ async function checkRuntime(browser, appDir, label, errors) {
   // App tab: change name and colour, see preview follow
   await page.locator('[data-apptab=app]').click();
   await page.locator('[data-section=name] summary').click();
-  await page.locator('.field', { hasText: 'App name' }).locator('input').fill('Field Health Visits');
+  await page.locator('.field', { hasText: 'App name' }).locator('input').fill('Kampala Health Visits');
   await page.locator('[data-section=look] summary').click();
   await page.locator('[data-section=look] [data-colour="#6D28D9"]').first().click();
   await page.waitForTimeout(500);
-  assert.match(await frame.locator('h1').textContent(), /Field Health Visits/);
+  assert.match(await frame.locator('h1').textContent(), /Kampala Health Visits/);
   assert.equal(await frame.locator('.top').evaluate(el => getComputedStyle(el).backgroundColor), 'rgb(109, 40, 217)');
   await page.screenshot({ path: path.join(SHOTS, '3-app.png'), fullPage: true });
 
@@ -187,14 +187,14 @@ async function checkRuntime(browser, appDir, label, errors) {
   await page.locator('[data-apptab=publish]').click();
   await page.screenshot({ path: path.join(SHOTS, '5-publish.png'), fullPage: true });
   const [dl] = await Promise.all([page.waitForEvent('download'), page.getByRole('button', { name: /Download app bundle/ }).click()]);
-  assert.equal(dl.suggestedFilename(), 'field-health-visits_v1.0.0_bundle.zip');
+  assert.equal(dl.suggestedFilename(), 'kampala-health-visits_v1.0.0_bundle.zip');
   const bundlePath = path.join(OUT, dl.suggestedFilename());
   await dl.saveAs(bundlePath);
   const [dl2] = await Promise.all([page.waitForEvent('download'), page.getByRole('button', { name: /Source project/ }).click()]);
-  assert.equal(dl2.suggestedFilename(), 'field-health-visits_v1.0.0_source.zip');
+  assert.equal(dl2.suggestedFilename(), 'kampala-health-visits_v1.0.0_source.zip');
   await dl2.saveAs(path.join(OUT, dl2.suggestedFilename()));
   const [dl3] = await Promise.all([page.waitForEvent('download'), page.getByRole('button', { name: /Project file/ }).click()]);
-  assert.equal(dl3.suggestedFilename(), 'field-health-visits.odeapp.json');
+  assert.equal(dl3.suggestedFilename(), 'kampala-health-visits.odeapp.json');
 
   const zip = await JSZip.loadAsync(fs.readFileSync(bundlePath));
   const names = Object.keys(zip.files).filter(n => !zip.files[n].dir).sort();
@@ -205,12 +205,30 @@ async function checkRuntime(browser, appDir, label, errors) {
 
   // Reload keeps the work (autosave), and both apps are listed at home
   await page.reload();
-  await page.getByRole('heading', { name: 'Field Health Visits' }).waitFor();
+  await page.getByRole('heading', { name: 'Kampala Health Visits' }).waitFor();
   await page.locator('.brandmark').click();
   await page.locator('.app-row').first().waitFor();
   assert.equal(await page.locator('.app-row').count(), 2);
-  assert.match(await page.locator('.app-row').first().textContent(), /Field Health Visits/);
+  assert.match(await page.locator('.app-row').first().textContent(), /Kampala Health Visits/);
   await page.locator('.app-row .app-open').first().click();
+  await page.locator('[data-apptab=publish]').click();
+
+  // Device preview: ODE Desktop sizes, rotate, and an Android Back that steps one screen
+  await page.locator('[data-apptab=forms]').click();
+  await page.selectOption('#pvDevice', 'android-standard-tablet');
+  await page.waitForFunction(() => /^800 × 1280 · Portrait/.test(document.getElementById('pvMeta').textContent));
+  await page.locator('#pvRotate').click();
+  await page.waitForFunction(() => /^1280 × 800 · Landscape/.test(document.getElementById('pvMeta').textContent));
+  await page.selectOption('#pvDevice', 'android-medium-phone');
+  await page.locator('#pvRotate').click();
+  await frame.locator('.card').first().click();
+  await frame.locator('[data-id]').first().waitFor();
+  const before = await page.evaluate(() => history.length);
+  await page.locator('[data-nav=back]').click();
+  await frame.locator('.card').first().waitFor();
+  await page.locator('[data-nav=back]').click();
+  await page.locator('.dv-toast:not([hidden])').waitFor();
+  assert.equal(await page.evaluate(() => history.length), before, 'the preview never adds to the builder history');
   await page.locator('[data-apptab=publish]').click();
 
   // Phone layout: no sideways scroll on any screen
@@ -243,7 +261,7 @@ async function checkRuntime(browser, appDir, label, errors) {
   const [dlrs] = await Promise.all([page.waitForEvent('download'), page.getByRole('button', { name: /Source project/ }).click()]);
   const rsrc = await JSZip.loadAsync(fs.readFileSync(await dlrs.path()));
   for (const f of ['src/App.tsx', 'src/router.ts', 'vite.config.ts', 'public/icons.js', 'app/runtime.js', 'app/config.js', 'forms/household/schema.json'])
-    assert.ok(rsrc.file('field-health-visits/' + f), 'React source has ' + f);
+    assert.ok(rsrc.file('kampala-health-visits/' + f), 'React source has ' + f);
 
   // Without Formulus: friendly message, no crash
   const plain = await browser.newPage();
